@@ -1,0 +1,24 @@
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+
+path: calibration-2023 # dataset root dir
+train: train # train images (relative to 'path') 4 images
+val: valid # val images (relative to 'path') 4 images
+test: test # test images (relative to 'path') 4 images
+
+
+# Classes 
+names:
+    0: "Goal left crossbar"
+    1: "Goal left crossbar"
+    2: "Goal left post left"
+    3: "Goal left post right"
+    4: "Goal right crossbar"
+    5: "Goal right crossbar"
+    6: "Goal right post left"
+    7: "Goal right post right"
+    8: "Small rect. left top"
+    9: "Small rect. left main"
+    10: "Small rect. left bottom"
+    11: "Small rect. right top"
+    12: "Small rect. right main"
+    13: "Small rect. right bottom"
