@@ -40,6 +40,8 @@ for dataset_dir in dataset_dirs:
     dirs.append(test_dir)
     
 
+    
+
 # for dir_name in tqdm(dirs, desc=f"Converting goal and penalty lines to YOLO format"):
 
 def convert(dir_name):
@@ -70,24 +72,14 @@ def convert(dir_name):
             if len(points) > 1 and label in class_mapping.keys():
                 
                 class_id = class_mapping[label]
-            
+                
                 annotated_points = []
                 coordinates = []
                 # YOLO Segmentation dataset requires at least 3 xy-coordinates, but SoccerNet only has 2 coordinates.
-                for point in points:
-                    coordinates.append([point['x'], point['y']])
                     
-                coordinates = np.asarray(coordinates)
+                coordinates = endpoints2linesegment(points, 50)
                 # All coordinates should be between 0 and 1 (remove the normalization errors)
                 coordinates = np.clip(coordinates, 0, 1)
-                
-                
-                mid_coord = coordinates.mean(0)
-                coordinates = np.vstack((coordinates, mid_coord))
-                coordinates = np.sort(coordinates, axis=0)
-                
-                if len(coordinates) <=2:
-                    print(f"Error in {file}")
                 
                 for coordinate in coordinates:
                     annotated_points.append(f"{coordinate[0]:.6f} {coordinate[0]:.6f}")
@@ -97,6 +89,42 @@ def convert(dir_name):
                 
         with open(os.path.join(dir_name, file + '.txt'), "w") as f:
             f.write("\n".join(yolo_annotations))
+            
+  
+def endpoints2linesegment(points, num_points):
+    '''
+    Make a set of points that consist of a line made of two end points
+    Args:
+    - Points: list of point dict
+    - num_points: number of points in a line segment we want to make
+    '''
+    coordinates = []
+    for point in points:
+        coordinates.append([point['x'], point['y']])
+        
+    coordinates = np.asarray(coordinates)
+    p1, p2 = coordinates[0], coordinates[1]
+    vec = p2 - p1
+    mag = np.linalg.norm(vec)
+    
+    inter_scale = np.linspace(0, 1, num_points)
+    inter_x = vec[0] * inter_scale
+    inter_y = vec[1] * inter_scale
+    point_set = np.concatenate((inter_x.reshape(num_points,1), inter_y.reshape(num_points,1)), axis=1)
+    point_set += p1.reshape(-1,2)
+    
+    return point_set
+    
+def visualize_annotated_points(image_file, points):
+    image = cv2.imread(image_file)
+    
+    fig = plt.figure()
+    
+    plt.imshow(image)
+    plt.plot(points[:,0] * 640, points[:,1] * 640)
+    plt.savefig("test.jpg")
+    
+    
         
         
 def check_imagesize(dir_name):
@@ -130,10 +158,6 @@ def count_annotation_points(dir_name):
                 # if len(points) == 1:
                 #     print(f"Single Point in {file}")
                 
-                
-            
-            
-        
 parmap.map(convert, dirs, pm_processes=16)
 # parmap.map(check_imagesize, dirs, pm_processes=16)
 # parmap.map(count_annotation_points, dirs, pm_processes=16)
